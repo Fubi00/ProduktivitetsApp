@@ -17,9 +17,9 @@ function startTimer() {
             `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
         document.getElementById("progressBar").value = ((totalTime - time) / totalTime) * 100;
 
-        // Spill lyd de siste 5 sekundene
-        if (time <= 10 && time > 0) {
-            countdownSound.play(); // Legg til en passende lydfil for nedtelling
+        // Spill nedtellingslyden når det er 11 sekunder igjen
+        if (time === 11) {
+            countdownSound.play();
         }
 
         if (time > 0) {
@@ -33,27 +33,29 @@ function startTimer() {
                 isWorkPeriod = false; // Sett til pauseperiode
                 setTimeout(startBreak, 200); // Start pause automatisk etter en liten forsinkelse
             } else {
-                alert("Pause ferdig! Tilbake til arbeid!");
-                startTimer(); // Start en ny arbeidsperiode
+                isWorkPeriod = true; // Sett til arbeid igjen
+                setTimeout(() => alert("Pause ferdig! Tilbake til arbeid!"), 200);
+                setTimeout(startTimer, 200); // Start ny arbeidsperiode automatisk
             }
         }
     }, 1000);
 }
 
 function startBreak() {
-    isWorkPeriod = false; // Bytt til pauseperiode
     let breakTime;
     if (totalTime <= 25 * 60) {
-        breakTime = 5 * 60; // 5 minutter pause for 25 minutter
+        breakTime = 5 * 60; // 5 minutter pause for 25 minutter arbeid
     } else if (totalTime <= 50 * 60) {
-        breakTime = 10 * 60; // 10 minutter pause for 50 minutter
+        breakTime = 10 * 60; // 10 minutter pause for 50 minutter arbeid
     } else {
         breakTime = 15 * 60; // 15 minutter pause for lengre arbeid
     }
     time = breakTime;
     totalTime = breakTime;
-    alert("Arbeidsperiode over. Starter pause!");
-    startTimer();
+    document.getElementById("timer").textContent = "Pause starter!";
+    alarmSound.pause();
+    alarmSound.currentTime = 0;
+    setTimeout(startTimer, 1000); // Start pausetimeren automatisk
 }
 
 function postponeTimer(minutes) {
