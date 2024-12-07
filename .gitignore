@@ -1,0 +1,23 @@
+# Python-spesifikke filer
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node.js-prosjekter
+node_modules/
+
+# Miljøfiler
+.env
+
+# Loggfiler
+*.log
+
+# Operativsystemfiler
+.DS_Store
+Thumbs.db
+
+# IDE-konfigurasjon
+.vscode/
+.idea/
+
