@@ -2,11 +2,8 @@ let time = 25 * 60; // Standard tid: 25 minutter
 let timerInterval;
 let totalTime;
 let isWorkPeriod = true; // Holder styr på om det er arbeid eller pause
-
-function playSound(url) {
-    const audio = new Audio(url);
-    audio.play();
-}
+const countdownSound = new Audio('lydfiler/timerCountDown11s.mp3');
+const alarmSound = new Audio('lydfiler/timerAlarm.mp3');
 
 function startTimer() {
     const userInput = document.getElementById("timeInput").value;
@@ -21,14 +18,17 @@ function startTimer() {
         document.getElementById("progressBar").value = ((totalTime - time) / totalTime) * 100;
 
         // Spill lyd de siste 5 sekundene
-        if (time <= 5 && time > 0) {
-            playSound('beep.mp3'); // Legg til en passende lydfil for nedtelling
+        if (time <= 10 && time > 0) {
+            countdownSound.play(); // Legg til en passende lydfil for nedtelling
         }
 
         if (time > 0) {
             time--;
         } else {
             clearInterval(timerInterval);
+            countdownSound.pause(); // Stopp nedtellingslyden hvis den fortsatt spiller
+            countdownSound.currentTime = 0; // Resett lyden
+            alarmSound.play(); // Spill alarmlyden
             if (isWorkPeriod) {
                 startBreak();
             } else {
