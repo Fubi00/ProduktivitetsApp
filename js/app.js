@@ -30,7 +30,8 @@ function startTimer() {
             countdownSound.currentTime = 0; // Resett lyden
             alarmSound.play(); // Spill alarmlyden
             if (isWorkPeriod) {
-                startBreak();
+                isWorkPeriod = false; // Sett til pauseperiode
+                setTimeout(startBreak, 200); // Start pause automatisk etter en liten forsinkelse
             } else {
                 alert("Pause ferdig! Tilbake til arbeid!");
                 startTimer(); // Start en ny arbeidsperiode
