@@ -1,37 +1,89 @@
-let time = 25 * 60; // Global variabel for total tid
+let time = 25 * 60; // Standard tid: 25 minutter
 let timerInterval;
-const progressBar = document.getElementById("progressBar");
-progressBar.style.backgroundColor = time / totalTime > 0.5 ? "green" : "red";
+let totalTime;
+let isWorkPeriod = true; // Holder styr på om det er arbeid eller pause
 
-
-function playSound() {
-    const audio = new Audio('alarm.mp3');
+function playSound(url) {
+    const audio = new Audio(url);
     audio.play();
-  }
+}
 
-  function startTimer() {
+function startTimer() {
     const userInput = document.getElementById("timeInput").value;
-    totalTime = userInput ? userInput * 60 : 25 * 60; // Total tid basert på input
-    time = totalTime; // Sett `time` til total tid
+    totalTime = userInput ? userInput * 60 : 25 * 60; // Total tid i sekunder
+    time = totalTime;
+    updateButtonsState(true); // Deaktiver knapper under timeren
     timerInterval = setInterval(() => {
-      const minutes = Math.floor(time / 60);
-      const seconds = time % 60;
-      document.getElementById("timer").textContent =
-        `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-      document.getElementById("progressBar").value = ((totalTime - time) / totalTime) * 100;
+        const minutes = Math.floor(time / 60);
+        const seconds = time % 60;
+        document.getElementById("timer").textContent =
+            `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        document.getElementById("progressBar").value = ((totalTime - time) / totalTime) * 100;
 
-      if (time > 0) {
-        time--;
-      } else {
-        clearInterval(timerInterval);
-        playSound();
-        alert("Tid er ute!");
-      }
+        // Spill lyd de siste 5 sekundene
+        if (time <= 5 && time > 0) {
+            playSound('beep.mp3'); // Legg til en passende lydfil for nedtelling
+        }
+
+        if (time > 0) {
+            time--;
+        } else {
+            clearInterval(timerInterval);
+            if (isWorkPeriod) {
+                startBreak();
+            } else {
+                alert("Pause ferdig! Tilbake til arbeid!");
+                startTimer(); // Start en ny arbeidsperiode
+            }
+        }
     }, 1000);
 }
 
-document.getElementById("startButton").addEventListener("click", startTimer);
+function startBreak() {
+    isWorkPeriod = false; // Bytt til pauseperiode
+    let breakTime;
+    if (totalTime <= 25 * 60) {
+        breakTime = 5 * 60; // 5 minutter pause for 25 minutter
+    } else if (totalTime <= 50 * 60) {
+        breakTime = 10 * 60; // 10 minutter pause for 50 minutter
+    } else {
+        breakTime = 15 * 60; // 15 minutter pause for lengre arbeid
+    }
+    time = breakTime;
+    totalTime = breakTime;
+    alert("Arbeidsperiode over. Starter pause!");
+    startTimer();
+}
+
+function postponeTimer(minutes) {
+    time += minutes * 60; // Legger til tid
+    totalTime += minutes * 60; // Justerer total tid
+    document.getElementById("timer").textContent = formatTime(time);
+}
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+}
+
+function updateButtonsState(disabled) {
+    document.querySelectorAll(".postpone-button").forEach((button) => {
+        button.disabled = disabled;
+    });
+}
+
+document.getElementById("startButton").addEventListener("click", () => {
+    isWorkPeriod = true;
+    startTimer();
+});
+
 document.getElementById("pauseButton").addEventListener("click", () => {
-    clearInterval(timerInterval); // Stopper timeren midlertidig
-  });
-  
+    clearInterval(timerInterval);
+    updateButtonsState(false); // Aktiver knapper igjen
+});
+
+// Knapp for å utsette timeren
+document.getElementById("postpone10").addEventListener("click", () => postponeTimer(10));
+document.getElementById("postpone20").addEventListener("click", () => postponeTimer(20));
+document.getElementById("postpone40").addEventListener("click", () => postponeTimer(40));
