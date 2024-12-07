@@ -5,6 +5,37 @@ let isWorkPeriod = true; // Holder styr på om det er arbeid eller pause
 const countdownSound = new Audio('lydfiler/timerCountDown11s.mp3');
 const alarmSound = new Audio('lydfiler/timerAlarm.mp3');
 
+// Konfigurer lydvolum
+countdownSound.volume = 0;
+alarmSound.volume = 1;
+
+function fadeIn(audio) {
+    let volume = 0;
+    const interval = setInterval(() => {
+        if (volume < 1) {
+            volume += 0.05;
+            audio.volume = Math.min(volume, 1);
+        } else {
+            clearInterval(interval);
+        }
+    }, 100); // Øk volumet gradvis hver 100ms
+}
+
+function fadeOut(audio, callback) {
+    let volume = audio.volume;
+    const interval = setInterval(() => {
+        if (volume > 0) {
+            volume -= 0.05;
+            audio.volume = Math.max(volume, 0);
+        } else {
+            clearInterval(interval);
+            audio.pause();
+            audio.currentTime = 0;
+            if (callback) callback();
+        }
+    }, 100); // Reduser volumet gradvis hver 100ms
+}
+
 function startTimer() {
     const userInput = document.getElementById("timeInput").value;
     totalTime = userInput ? userInput * 60 : 25 * 60; // Total tid i sekunder
@@ -20,22 +51,26 @@ function startTimer() {
         // Spill nedtellingslyden når det er 11 sekunder igjen
         if (time === 11) {
             countdownSound.play();
+            fadeIn(countdownSound); // Fade inn lyden
         }
 
         if (time > 0) {
             time--;
         } else {
             clearInterval(timerInterval);
-            countdownSound.pause(); // Stopp nedtellingslyden hvis den fortsatt spiller
-            countdownSound.currentTime = 0; // Resett lyden
+            fadeOut(countdownSound); // Fade ut nedtellingslyden
             alarmSound.play(); // Spill alarmlyden
             if (isWorkPeriod) {
-                isWorkPeriod = false; // Sett til pauseperiode
-                setTimeout(startBreak, 200); // Start pause automatisk etter en liten forsinkelse
+                setTimeout(() => {
+                    isWorkPeriod = false;
+                    startBreak();
+                }, 200); // Start pause etter alarmen
             } else {
-                isWorkPeriod = true; // Sett til arbeid igjen
-                setTimeout(() => alert("Pause ferdig! Tilbake til arbeid!"), 200);
-                setTimeout(startTimer, 200); // Start ny arbeidsperiode automatisk
+                setTimeout(() => {
+                    alert("Pause ferdig! Tilbake til arbeid!");
+                    isWorkPeriod = true;
+                    startTimer(); // Start ny arbeidsperiode automatisk
+                }, 200);
             }
         }
     }, 1000);
@@ -53,9 +88,18 @@ function startBreak() {
     time = breakTime;
     totalTime = breakTime;
     document.getElementById("timer").textContent = "Pause starter!";
-    alarmSound.pause();
-    alarmSound.currentTime = 0;
-    setTimeout(startTimer, 1000); // Start pausetimeren automatisk
+    alarmSound.addEventListener('ended', () => {
+        setTimeout(startTimer, 1000); // Start pausetimeren automatisk
+    });
+}
+
+function pauseTimer() {
+    clearInterval(timerInterval);
+    fadeOut(countdownSound); // Fade ut nedtellingslyden hvis timeren stoppes
+    updateButtonsState(false); // Aktiver knapper igjen
+    time = 5 * 60; // Sett en 5-minutters pause
+    isWorkPeriod = false;
+    startTimer(); // Start pausen
 }
 
 function postponeTimer(minutes) {
@@ -81,12 +125,4 @@ document.getElementById("startButton").addEventListener("click", () => {
     startTimer();
 });
 
-document.getElementById("pauseButton").addEventListener("click", () => {
-    clearInterval(timerInterval);
-    updateButtonsState(false); // Aktiver knapper igjen
-});
-
-// Knapp for å utsette timeren
-document.getElementById("postpone10").addEventListener("click", () => postponeTimer(10));
-document.getElementById("postpone20").addEventListener("click", () => postponeTimer(20));
-document.getElementById("postpone40").addEventListener("click", () => postponeTimer(40));
+document.getElementById("pauseButton").addEvent
